@@ -8,10 +8,16 @@ else
   VENV="python -m venv"
 fi
 
-$VENV -p python3 .virtualenv/sasm
+$VENV -p python3 .venv/sasm
 
 . activate
 
 pip install -U setuptools
 pip install -U pip
-pip install -r requirements.txt
+pip install -r dev-requirements.txt
+
+pytest
+
+echo ''
+echo 'Remember switching to venv:'
+echo '. activate'

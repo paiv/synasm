@@ -1,2 +1,5 @@
-/.prep
-/.virtualenv
+/.cache
+/.eggs
+/.venv
+/*.egg-info
+__pycache__

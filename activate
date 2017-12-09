@@ -1,4 +1,4 @@
 
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-source .virtualenv/sasm/bin/activate
+source .venv/sasm/bin/activate
