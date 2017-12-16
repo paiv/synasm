@@ -9,6 +9,9 @@ Installing
 pip install git+https://github.com/paiv/synasm.git
 ```
 
+Using
+-----
+
 ```
 usage: synasm [-h] [-o [OUTFILE]] [-b] [-v] [infile [infile ...]]
 
