@@ -1,3 +1,4 @@
+import ast
 import array
 import base64
 import fileinput
@@ -5,22 +6,23 @@ import re
 import sys
 
 
-comment_rx = re.compile(r';.*')
+class SynasmError(Exception): pass
+
+
+token_rx = re.compile(r'^\s*((?:\s*(?:\-?\'(?:\\.|[^\'])+\'|[^\s;]+))*?)\s*(?:;.*?)?\s*$', re.M)
 label_rx = re.compile(r'^\s*(\w+\:)?\s*(.*?)\s*$', re.M)
 
 def parse(text):
-    text = comment_rx.sub('', text)
-    text = text.strip()
-
-    for label,instr in label_rx.findall(text):
-        if label:
-            yield ':' + label[:-1]
-        if instr:
-            yield instr
+    for tok in token_rx.findall(text):
+        for label,instr in label_rx.findall(tok):
+            if label:
+                yield ':' + label[:-1]
+            if instr:
+                yield instr
 
 
 instr_rx = re.compile(r'^\s*(\w+)(.*?)\s*$')
-args_rx = re.compile(r'\s+(-?\'.\'|[:-]?\w+)')
+args_rx = re.compile(r'\s+(\-?\'(?:\\.|[^\'])+\'|[:-]?\w+)')
 
 op_table = {
     # name: code, nargs
@@ -49,14 +51,26 @@ op_table = {
 }
 
 
+def unescape(s):
+    u = ast.literal_eval(s)
+    return u if isinstance(u, str) else s
+
+
 def emit(asm, labels=None):
 
     def arg(x):
-        if x[0] == ':':
-            return labels.get(x, x) if labels else x
-        elif x[0] == '\'':
-            assert x[2] == '\''
-            return ord(x[1])
+        if x[0] == '\'':
+            assert x[-1] == '\''
+            x = unescape(x)
+            if len(x) == 1:
+                x = ord(x)
+            return x
+        elif x[0] == ':':
+            if labels is not None:
+                if x in labels:
+                    return labels[x]
+                raise SynasmError('{}  label not defined'.format(asm))
+            return x
         elif x[:2] == '-\'':
             assert x[3] == '\''
             return -ord(x[2]) % 32768
@@ -66,11 +80,26 @@ def emit(asm, labels=None):
             return int(x, 0) % 32768
 
 
-    op, args = instr_rx.findall(asm)[0]
+    def explode_str(code, i=1):
+        if i >= len(code):
+            yield code
+        elif isinstance(code[i], str) and code[i][0] != ':':
+            for x in code[i]:
+                yield from explode_str((*code[:i], ord(x), *code[i+1:]), i + 1)
+        else:
+            yield from explode_str(code, i + 1)
+
+
+    name, args = instr_rx.findall(asm)[0]
     args = [arg(x) for x in args_rx.findall(args) if x]
 
-    op, n = op_table[op]
-    yield (op, *args[:n])
+    op, n = op_table[name]
+    code = (op, *args[:n])
+
+    if len(code) != n + 1:
+        raise SynasmError('{}  {} takes {} arguments'.format(asm, name, n))
+
+    yield from explode_str(code)
 
 
 def step1(lines):
