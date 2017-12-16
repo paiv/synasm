@@ -9,6 +9,7 @@ matrix:
       env: TOXENV=py35
     - python: 3.6
       env: TOXENV=py36
+cache: pip
 install:
   - pip install tox
 script:

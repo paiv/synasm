@@ -1,6 +1,8 @@
 
 paiv – Assembler for Synacor VM (https://challenge.synacor.com/)
 
+[![Build Status](https://travis-ci.org/paiv/synasm.svg?branch=master)](https://travis-ci.org/paiv/synasm)
+
 
 Installing
 ----------
