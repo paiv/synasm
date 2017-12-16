@@ -85,21 +85,24 @@ def emit(asm, labels=None):
             yield code
         elif isinstance(code[i], str) and code[i][0] != ':':
             for x in code[i]:
-                yield from explode_str((*code[:i], ord(x), *code[i+1:]), i + 1)
+                for y in explode_str(code[:i] + (ord(x),) + code[i+1:], i + 1):
+                    yield y
         else:
-            yield from explode_str(code, i + 1)
+            for y in explode_str(code, i + 1):
+                yield y
 
 
     name, args = instr_rx.findall(asm)[0]
-    args = [arg(x) for x in args_rx.findall(args) if x]
+    args = tuple(arg(x) for x in args_rx.findall(args) if x)
 
     op, n = op_table[name]
-    code = (op, *args[:n])
+    code = (op,) + args[:n]
 
     if len(code) != n + 1:
         raise SynasmError('{}  {} takes {} arguments'.format(asm, name, n))
 
-    yield from explode_str(code)
+    for x in explode_str(code):
+        yield x
 
 
 def step1(lines):

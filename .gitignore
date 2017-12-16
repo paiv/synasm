@@ -1,5 +1,7 @@
 /.cache
 /.eggs
+/.tox
 /.venv
 /*.egg-info
 __pycache__
+*.pyc

@@ -8,7 +8,7 @@ else
   VENV="python -m venv"
 fi
 
-$VENV -p python3 .venv/sasm
+$VENV -p python2.7 .venv/sasm
 
 . activate
 
